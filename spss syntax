@@ -1,0 +1,90 @@
+COMPUTE quality_anc=0. 
+EXECUTE. 
+IF  (M57P$1 = 1 | M57E$1 = 1 | M57F$1 = 1 | M57G$1 = 1 | M57H$1 = 1 | M57I$1 = 1 | M57J$1 = 1 | M57M$1 = 1 | M57N$1 = 1 | M57O$1 = 1 | M57S$1 = 1 | M57T$1 = 1) quality_anc=1. 
+EXECUTE.
+
+
+
+COMPUTE ANC_coverage=0. 
+EXECUTE. 
+IF  ((quality_anc & trimester & number_of_antenatal_visits) = 1) ANC_coverage=1. 
+EXECUTE.
+
+
+
+COMPUTE justifies_beating=0. 
+EXECUTE. 
+IF  (V744A = 1 | V744B = 1 | V744C = 1 | V744D = 1 | V744E = 1) justifies_beating=1. 
+EXECUTE.
+
+
+
+COMPUTE anc_coverage2=0. 
+EXECUTE. 
+IF  (trimester = 1 & number_of_antenatal_visits = 1) anc_coverage2=1. 
+EXECUTE. 
+LOGISTIC REGRESSION VARIABLES anc_coverage2 
+  /METHOD=ENTER justifies_beating S711A 
+  /CONTRAST (justifies_beating)=Indicator 
+  /CONTRAST (S711A)=Indicator 
+  /CRITERIA=PIN(.05) POUT(.10) ITERATE(20) CUT(.5).
+
+
+RECODE V190 (2=1) (4=2) (5=2) INTO wealth. 
+VARIABLE LABELS  wealth 'wealth'. 
+EXECUTE. 
+RECODE V190 (2=1) (4=2) (5=2) (1=1) (3=3) INTO wealth. 
+VARIABLE LABELS  wealth 'wealth'. 
+EXECUTE. 
+DATASET ACTIVATE DataSet0. 
+ 
+SAVE OUTFILE='D:\Users\THINKPAD\Desktop\individual2.sav' 
+  /COMPRESSED. 
+IF  (V101 = 2 | V101 = 8) division3levels=1. 
+EXECUTE. 
+IF  (V101 = 4 | V101 = 6 | V101 = 7) division3levels=2. 
+EXECUTE. 
+IF  (V101 = 1 | V101 = 3 | V101 = 5) division3levels=3. 
+EXECUTE. 
+DATASET ACTIVATE DataSet0. 
+ 
+SAVE OUTFILE='D:\Users\THINKPAD\Desktop\individual2.sav' 
+  /COMPRESSED.
+
+COMPUTE preferred_age_groups_for_marriage=0. 
+EXECUTE. 
+IF  (S711B > 18) preferred_age_groups_for_marriage=1. 
+EXECUTE. 
+IF  (S711B = 18) preferred_age_groups_for_marriage=2. 
+EXECUTE.
+
+
+
+
+*************Final regression****************
+
+DATASET ACTIVATE DataSet0. 
+ 
+SAVE OUTFILE='D:\Users\THINKPAD\Desktop\individual3.sav' 
+  /COMPRESSED. 
+LOGISTIC REGRESSION VARIABLES ANC_coverage 
+  /METHOD=ENTER justifies_beating S711B 
+  /CONTRAST (justifies_beating)=Indicator 
+  /CRITERIA=PIN(.05) POUT(.10) ITERATE(20) CUT(.5).
+
+
+LOGISTIC REGRESSION VARIABLES ANC_coverage 
+  /METHOD=ENTER justifies_beating media_exposured S711B V106 V102 religion 
+  /CONTRAST (justifies_beating)=Indicator 
+  /CONTRAST (media_exposured)=Indicator 
+  /CONTRAST (V106)=Indicator 
+  /CONTRAST (V102)=Indicator 
+  /CONTRAST (religion)=Indicator 
+  /CRITERIA=PIN(.05) POUT(.10) ITERATE(20) CUT(.5).
+
+
+
+
+
+
+
